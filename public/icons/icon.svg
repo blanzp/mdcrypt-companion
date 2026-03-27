@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#131312"/>
+
+  <!-- Circular arrow (companion loop) -->
+  <!-- Arc path: ~300° arc around center, with arrowhead -->
+  <path d="
+    M 256 72
+    A 172 172 0 1 1 134 122
+  " fill="none" stroke="#f0ede6" stroke-width="18" stroke-linecap="round" opacity="0.35"/>
+  <!-- Arrowhead at the end of the arc -->
+  <polygon points="134,92 134,152 100,122" fill="#f0ede6" opacity="0.35"/>
+
+  <!-- Gothic arch shield: black fill, thick white border (scaled to ~75%) -->
+  <path d="
+    M 256 82
+    Q 380 176 380 312
+    L 380 410
+    Q 380 426 364 426
+    L 148 426
+    Q 132 426 132 410
+    L 132 312
+    Q 132 176 256 82 Z
+  " fill="#0d0d0c" stroke="#f0ede6" stroke-width="18" stroke-linejoin="round"/>
+
+  <!-- Padlock shackle — thick hollow U ring (scaled) -->
+  <path d="
+    M 205 310 L 205 256
+    A 51 51 0 0 1 307 256
+    L 307 310
+    L 286 310 L 286 256
+    A 30 30 0 0 0 226 256
+    L 226 310 Z
+  " fill="#f0ede6"/>
+
+  <!-- Padlock body — large rounded rect (scaled) -->
+  <rect x="185" y="298" width="142" height="115" rx="17" fill="#f0ede6"/>
+
+  <!-- Bold # cutout on lock body (scaled) -->
+  <!-- Vertical bars -->
+  <rect x="227" y="311" width="17" height="77" rx="3" fill="#0d0d0c"/>
+  <rect x="261" y="311" width="17" height="77" rx="3" fill="#0d0d0c"/>
+  <!-- Horizontal bars -->
+  <rect x="212" y="327" width="89" height="16" rx="3" fill="#0d0d0c"/>
+  <rect x="212" y="354" width="89" height="16" rx="3" fill="#0d0d0c"/>
+</svg>
