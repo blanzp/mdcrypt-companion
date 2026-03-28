@@ -2,16 +2,7 @@
   <!-- Background -->
   <rect width="512" height="512" rx="96" fill="#131312"/>
 
-  <!-- Circular arrow (companion loop) -->
-  <!-- Arc path: ~300° arc around center, with arrowhead -->
-  <path d="
-    M 256 72
-    A 172 172 0 1 1 134 122
-  " fill="none" stroke="#f0ede6" stroke-width="18" stroke-linecap="round" opacity="0.35"/>
-  <!-- Arrowhead at the end of the arc -->
-  <polygon points="134,92 134,152 100,122" fill="#f0ede6" opacity="0.35"/>
-
-  <!-- Gothic arch shield: black fill, thick white border (scaled to ~75%) -->
+  <!-- Gothic arch shield: black fill, thick white border -->
   <path d="
     M 256 82
     Q 380 176 380 312
