@@ -139,7 +139,12 @@ export async function POST(req: Request) {
   const mcpOwnerId = isShared ? chatSession.ownerId : session.user.id;
 
   const [mcpOwner] = await db
-    .select({ mcpApiKey: users.mcpApiKey, mcpSharedApiKey: users.mcpSharedApiKey })
+    .select({
+      mcpApiKey: users.mcpApiKey,
+      mcpSharedApiKey: users.mcpSharedApiKey,
+      mcpCryptId: users.mcpCryptId,
+      mcpSharedCryptId: users.mcpSharedCryptId,
+    })
     .from(users)
     .where(eq(users.id, mcpOwnerId))
     .limit(1);
@@ -147,11 +152,14 @@ export async function POST(req: Request) {
   const encryptedKey = isShared
     ? (mcpOwner?.mcpSharedApiKey ?? mcpOwner?.mcpApiKey)
     : mcpOwner?.mcpApiKey;
+  const cryptId = isShared
+    ? (mcpOwner?.mcpSharedCryptId ?? mcpOwner?.mcpCryptId)
+    : mcpOwner?.mcpCryptId;
 
   if (encryptedKey) {
     try {
       const apiKey = decrypt(encryptedKey);
-      mcpTools = await getMcpTools(apiKey);
+      mcpTools = await getMcpTools(apiKey, cryptId ?? undefined);
     } catch {
       // Decryption failed or MCP server unreachable — silently disable MCP
     }

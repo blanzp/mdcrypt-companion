@@ -2,14 +2,19 @@ import { createMCPClient } from "@ai-sdk/mcp";
 
 const MCP_BASE_URL = "https://mdcrypt.dev/mcp";
 
-export async function getMcpTools(apiKey: string) {
+export async function getMcpTools(apiKey: string, cryptId?: string) {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+  };
+  if (cryptId) {
+    headers["X-Crypt-Id"] = cryptId;
+  }
+
   const client = await createMCPClient({
     transport: {
       type: "http",
-      url: MCP_BASE_URL,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
+      url: cryptId ? `${MCP_BASE_URL}?crypt_id=${encodeURIComponent(cryptId)}` : MCP_BASE_URL,
+      headers,
     },
   });
 

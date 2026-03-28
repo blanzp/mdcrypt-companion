@@ -13,6 +13,7 @@ export function McpKeyForm() {
   const [apiKey, setApiKey] = useState("");
   const [sharedApiKey, setSharedApiKey] = useState("");
   const [cryptId, setCryptId] = useState("");
+  const [sharedCryptId, setSharedCryptId] = useState("");
   const [hasKey, setHasKey] = useState(false);
   const [hasSharedKey, setHasSharedKey] = useState(false);
   const [showKey, setShowKey] = useState(false);
@@ -27,6 +28,7 @@ export function McpKeyForm() {
         setHasKey(data.hasKey);
         setHasSharedKey(data.hasSharedKey);
         setCryptId(data.cryptId ?? "");
+        setSharedCryptId(data.sharedCryptId ?? "");
       })
       .catch(() => {});
   }, []);
@@ -43,6 +45,7 @@ export function McpKeyForm() {
         apiKey: apiKey || undefined,
         sharedApiKey: sharedApiKey || undefined,
         cryptId,
+        sharedCryptId,
       }),
     });
 
@@ -132,6 +135,13 @@ export function McpKeyForm() {
             value={cryptId}
             onChange={(e) => setCryptId(e.target.value)}
             placeholder="Your mdcrypt crypt ID"
+          />
+
+          <Input
+            label="Shared Sessions Crypt ID"
+            value={sharedCryptId}
+            onChange={(e) => setSharedCryptId(e.target.value)}
+            placeholder="Optional — falls back to personal crypt ID"
           />
 
           <Button type="submit" loading={loading} size="lg" className="w-full">

@@ -17,6 +17,7 @@ export async function GET() {
       mcpApiKey: users.mcpApiKey,
       mcpSharedApiKey: users.mcpSharedApiKey,
       mcpCryptId: users.mcpCryptId,
+      mcpSharedCryptId: users.mcpSharedCryptId,
     })
     .from(users)
     .where(eq(users.id, session.user.id))
@@ -26,6 +27,7 @@ export async function GET() {
     hasKey: !!user?.mcpApiKey,
     hasSharedKey: !!user?.mcpSharedApiKey,
     cryptId: user?.mcpCryptId ?? null,
+    sharedCryptId: user?.mcpSharedCryptId ?? null,
   });
 }
 
@@ -35,9 +37,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { apiKey, sharedApiKey, cryptId } = await req.json();
+  const { apiKey, sharedApiKey, cryptId, sharedCryptId } = await req.json();
 
-  const updateData: { mcpApiKey?: string; mcpSharedApiKey?: string | null; mcpCryptId?: string } = {};
+  const updateData: { mcpApiKey?: string; mcpSharedApiKey?: string | null; mcpCryptId?: string | null; mcpSharedCryptId?: string | null } = {};
 
   if (apiKey) {
     updateData.mcpApiKey = encrypt(apiKey);
@@ -47,6 +49,9 @@ export async function POST(req: Request) {
   }
   if (cryptId !== undefined) {
     updateData.mcpCryptId = cryptId || null;
+  }
+  if (sharedCryptId !== undefined) {
+    updateData.mcpSharedCryptId = sharedCryptId || null;
   }
 
   if (Object.keys(updateData).length > 0) {

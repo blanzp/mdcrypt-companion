@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   mcpApiKey: text("mcp_api_key"),
   mcpSharedApiKey: text("mcp_shared_api_key"),
   mcpCryptId: text("mcp_crypt_id"),
+  mcpSharedCryptId: text("mcp_shared_crypt_id"),
   inviteStatus: inviteStatusEnum("invite_status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
