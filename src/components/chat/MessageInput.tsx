@@ -152,7 +152,7 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
             className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500 text-xs font-medium text-white">
-              AI
+              CK
             </span>
             <div>
               <span className="font-medium">@{AI_NAME}</span>

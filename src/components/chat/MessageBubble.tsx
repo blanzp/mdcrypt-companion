@@ -45,7 +45,7 @@ export function MessageBubble({
     <div className="flex gap-2">
       {showAvatar && (
         <Avatar
-          name={role === "assistant" ? "AI" : senderName}
+          name={role === "assistant" ? "CK" : senderName}
           size="sm"
           className="mt-1"
         />

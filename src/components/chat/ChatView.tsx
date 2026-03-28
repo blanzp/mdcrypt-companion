@@ -88,7 +88,7 @@ export function ChatView() {
           <div className="flex gap-2">
             {isShared && (
               <div className="h-8 w-8 shrink-0 flex items-center justify-center rounded-full bg-purple-500 text-xs font-medium text-white mt-1">
-                AI
+                CK
               </div>
             )}
             <div className="max-w-[80%] rounded-2xl rounded-bl-md bg-zinc-100 px-4 py-2.5 dark:bg-zinc-800">
