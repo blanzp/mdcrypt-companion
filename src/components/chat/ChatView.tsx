@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useChat } from "@/hooks/useChat";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
@@ -40,6 +40,15 @@ export function ChatView() {
       });
     });
   }, [messages, messages.length, streamingMessage, isStreaming]);
+
+  const scrollToBottom = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+  }, []);
 
   const isShared = activeSession?.mode === "shared";
 
@@ -114,7 +123,7 @@ export function ChatView() {
       </div>
 
       {/* Input */}
-      <MessageInput onSend={sendMessage} disabled={isStreaming} isShared={isShared} />
+      <MessageInput onSend={sendMessage} disabled={isStreaming} isShared={isShared} onFocus={scrollToBottom} />
     </div>
   );
 }

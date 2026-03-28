@@ -46,7 +46,7 @@ export function MainShell() {
   }, [handleTouchStart, handleTouchEnd]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       {/* Header */}
       <header
         className="flex h-12 shrink-0 items-center border-b border-zinc-200 px-4 dark:border-zinc-700"

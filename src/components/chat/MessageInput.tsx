@@ -14,9 +14,10 @@ interface MessageInputProps {
   onSend: (content: string) => void;
   disabled: boolean;
   isShared: boolean;
+  onFocus?: () => void;
 }
 
-export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) {
+export function MessageInput({ onSend, disabled, isShared, onFocus }: MessageInputProps) {
   const [value, setValue] = useState("");
   const [showTypeahead, setShowTypeahead] = useState(false);
   const [mentionStart, setMentionStart] = useState<number | null>(null);
@@ -170,6 +171,7 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
           ref={textareaRef}
           value={value}
           onChange={(e) => handleChange(e.target.value)}
+          onFocus={onFocus}
           onKeyDown={handleKeyDown}
           placeholder={
             isShared ? `Message... (use @${AI_NAME} to summon AI)` : "Message..."

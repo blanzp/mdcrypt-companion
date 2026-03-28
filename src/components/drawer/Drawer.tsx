@@ -101,7 +101,10 @@ export function Drawer() {
         </div>
 
         {/* Footer Links */}
-        <div className="border-t border-zinc-200 dark:border-zinc-700">
+        <div
+          className="border-t border-zinc-200 dark:border-zinc-700"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           <Link
             href="/settings"
             onClick={() => setDrawerOpen(false)}
