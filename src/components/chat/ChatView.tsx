@@ -24,7 +24,8 @@ export function ChatView() {
 
   const { messages, isLoading, sendMessage } = useChat(
     activeSessionId,
-    activeSession?.mode ?? null
+    activeSession?.mode ?? null,
+    session?.user?.id
   );
   useSessionEvents(activeSessionId, activeSession?.mode ?? null);
 
@@ -67,7 +68,7 @@ export function ChatView() {
             role={msg.role}
             isCurrentUser={msg.senderId === session?.user?.id}
             senderName={msg.senderName}
-            showAvatar={isShared && msg.role !== "user"}
+            showAvatar={isShared && (msg.role === "assistant" || msg.senderId !== session?.user?.id)}
             createdAt={msg.createdAt}
           />
         ))}

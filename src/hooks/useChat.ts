@@ -21,7 +21,8 @@ const KEEPER_RE = new RegExp(`@${AI_NAME}\\b`, "i");
 
 export function useChat(
   sessionId: string | null,
-  sessionMode: "private" | "shared" | null
+  sessionMode: "private" | "shared" | null,
+  userId?: string
 ) {
   const { data, mutate, isLoading } = useSWR<Message[]>(
     sessionId ? `/api/sessions/${sessionId}/messages` : null,
@@ -48,7 +49,7 @@ export function useChat(
     const optimisticMsg: Message = {
       id: `temp-${Date.now()}`,
       sessionId,
-      senderId: "self",
+      senderId: userId ?? "self",
       senderName: null,
       senderEmail: null,
       role: "user",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import useSWR from "swr";
 
 interface Message {
@@ -20,9 +20,15 @@ export function useSessionEvents(
     sessionId ? `/api/sessions/${sessionId}/messages` : null
   );
   const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  const connect = useCallback(() => {
     if (!sessionId || mode !== "shared") return;
+
+    // Clean up any existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
 
     const eventSource = new EventSource(
       `/api/sessions/${sessionId}/events`
@@ -35,9 +41,11 @@ export function useSessionEvents(
         mutate(
           (prev) => {
             if (!prev) return prev;
-            // Avoid duplicates
-            if (prev.some((m) => m.id === message.id)) return prev;
-            return [...prev, message];
+            // Avoid duplicates — match by id, also replace temp optimistic messages
+            const withoutTemp = prev.filter(
+              (m) => m.id !== message.id && !(m.id.startsWith("temp-") && m.content === message.content && m.role === message.role)
+            );
+            return [...withoutTemp, message];
           },
           { revalidate: false }
         );
@@ -49,16 +57,24 @@ export function useSessionEvents(
     eventSource.onerror = () => {
       eventSource.close();
       // Reconnect after 3 seconds
-      setTimeout(() => {
-        if (eventSourceRef.current === eventSource) {
-          eventSourceRef.current = null;
-        }
+      reconnectTimer.current = setTimeout(() => {
+        connect();
       }, 3000);
     };
+  }, [sessionId, mode, mutate]);
+
+  useEffect(() => {
+    connect();
 
     return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
     };
-  }, [sessionId, mode, mutate]);
+  }, [connect]);
 }
