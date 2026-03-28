@@ -33,11 +33,13 @@ export function ChatView() {
 
   // Auto-scroll on new messages or streaming
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     });
-  }, [messages, streamingMessage]);
+  }, [messages, messages.length, streamingMessage, isStreaming]);
 
   const isShared = activeSession?.mode === "shared";
 
