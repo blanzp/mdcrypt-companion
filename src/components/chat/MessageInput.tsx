@@ -15,9 +15,10 @@ interface MessageInputProps {
   disabled: boolean;
   isShared: boolean;
   onFocus?: () => void;
+  onNewSession?: () => void;
 }
 
-export function MessageInput({ onSend, disabled, isShared, onFocus }: MessageInputProps) {
+export function MessageInput({ onSend, disabled, isShared, onFocus, onNewSession }: MessageInputProps) {
   const [value, setValue] = useState("");
   const [showTypeahead, setShowTypeahead] = useState(false);
   const [mentionStart, setMentionStart] = useState<number | null>(null);
@@ -200,6 +201,28 @@ export function MessageInput({ onSend, disabled, isShared, onFocus }: MessageInp
             />
           </svg>
         </button>
+        {onNewSession && (
+          <button
+            onClick={onNewSession}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-zinc-600 transition-colors hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+            aria-label="New session"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+          </button>
+        )}
+
       </div>
       {disabled && (
         <p className="mt-1 text-center text-xs text-zinc-400">

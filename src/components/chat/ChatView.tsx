@@ -55,11 +55,16 @@ export function ChatView() {
   if (!activeSessionId) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="text-4xl">💬</div>
         <h2 className="text-lg font-medium">Start a conversation</h2>
-        <p className="text-sm text-zinc-500">
-          Create a new session using the + button
-        </p>
+        <button
+          onClick={() => useAppStore.getState().setNewSessionModalOpen(true)}
+          className="flex h-12 items-center gap-2 rounded-full bg-blue-500 px-5 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New Session
+        </button>
       </div>
     );
   }
@@ -123,7 +128,13 @@ export function ChatView() {
       </div>
 
       {/* Input */}
-      <MessageInput onSend={sendMessage} disabled={isStreaming} isShared={isShared} onFocus={scrollToBottom} />
+      <MessageInput
+        onSend={sendMessage}
+        disabled={isStreaming}
+        isShared={isShared}
+        onFocus={scrollToBottom}
+        onNewSession={() => useAppStore.getState().setNewSessionModalOpen(true)}
+      />
     </div>
   );
 }

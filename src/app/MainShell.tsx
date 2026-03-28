@@ -6,7 +6,6 @@ import { useAppStore } from "@/stores/app-store";
 import { useSessions } from "@/hooks/useSessions";
 import { Drawer } from "@/components/drawer/Drawer";
 import { ChatView } from "@/components/chat/ChatView";
-import { NewSessionFAB } from "@/components/session/NewSessionFAB";
 import { NewSessionModal } from "@/components/session/NewSessionModal";
 import { AddMemberModal } from "@/components/session/AddMemberModal";
 
@@ -108,7 +107,6 @@ export function MainShell() {
       <Drawer />
 
       {/* FAB + Modal */}
-      <NewSessionFAB />
       <NewSessionModal />
       <AddMemberModal />
     </div>
