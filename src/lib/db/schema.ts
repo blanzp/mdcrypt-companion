@@ -3,8 +3,11 @@ import {
   pgEnum,
   uuid,
   text,
+  integer,
+  jsonb,
   timestamp,
   primaryKey,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -80,6 +83,38 @@ export const messages = pgTable("messages", {
     .defaultNow(),
 });
 
+// Polls
+export const polls = pgTable("polls", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => sessions.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  options: jsonb("options").notNull().$type<string[]>(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Poll Votes
+export const pollVotes = pgTable(
+  "poll_votes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pollId: uuid("poll_id")
+      .notNull()
+      .references(() => polls.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    optionIndex: integer("option_index").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("poll_votes_poll_user_idx").on(t.pollId, t.userId)]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   ownedSessions: many(sessions),
@@ -114,6 +149,25 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
   sender: one(users, {
     fields: [messages.senderId],
+    references: [users.id],
+  }),
+}));
+
+export const pollsRelations = relations(polls, ({ one, many }) => ({
+  session: one(sessions, {
+    fields: [polls.sessionId],
+    references: [sessions.id],
+  }),
+  votes: many(pollVotes),
+}));
+
+export const pollVotesRelations = relations(pollVotes, ({ one }) => ({
+  poll: one(polls, {
+    fields: [pollVotes.pollId],
+    references: [polls.id],
+  }),
+  user: one(users, {
+    fields: [pollVotes.userId],
     references: [users.id],
   }),
 }));

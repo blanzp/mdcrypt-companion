@@ -1,5 +1,6 @@
-import { z } from "zod";
 import { jsonSchema, type ToolSet } from "ai";
+import { db } from "@/lib/db";
+import { polls } from "@/lib/db/schema";
 
 const BRAVE_API_KEY = process.env.BRAVE_API_KEY;
 
@@ -137,7 +138,170 @@ const weatherInputSchema = {
   required: ["location"] as string[],
 };
 
-export function getBuiltinTools(): ToolSet {
+// HTML entity decoder for Open Trivia DB responses
+function decodeHtml(html: string): string {
+  return html
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&ldquo;/g, "\u201C")
+    .replace(/&rdquo;/g, "\u201D")
+    .replace(/&lsquo;/g, "\u2018")
+    .replace(/&rsquo;/g, "\u2019")
+    .replace(/&eacute;/g, "\u00E9");
+}
+
+async function getTrivia(amount: number, difficulty?: string, category?: number) {
+  const url = new URL("https://opentdb.com/api.php");
+  url.searchParams.set("amount", String(amount));
+  url.searchParams.set("type", "multiple");
+  if (difficulty) url.searchParams.set("difficulty", difficulty);
+  if (category) url.searchParams.set("category", String(category));
+
+  const res = await fetch(url.toString());
+  if (!res.ok) return { error: "Trivia API failed" };
+
+  const data = await res.json();
+  if (data.response_code !== 0) return { error: "No trivia questions available" };
+
+  return {
+    questions: data.results.map(
+      (q: {
+        question: string;
+        correct_answer: string;
+        incorrect_answers: string[];
+        category: string;
+        difficulty: string;
+      }) => ({
+        question: decodeHtml(q.question),
+        correct_answer: decodeHtml(q.correct_answer),
+        incorrect_answers: q.incorrect_answers.map(decodeHtml),
+        category: decodeHtml(q.category),
+        difficulty: q.difficulty,
+      })
+    ),
+  };
+}
+
+const RIDDLES = [
+  { riddle: "I have cities but no houses, forests but no trees, and water but no fish. What am I?", answer: "A map" },
+  { riddle: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?", answer: "An echo" },
+  { riddle: "The more you take, the more you leave behind. What am I?", answer: "Footsteps" },
+  { riddle: "I have a head and a tail but no body. What am I?", answer: "A coin" },
+  { riddle: "What has keys but no locks, space but no room, and you can enter but can't go inside?", answer: "A keyboard" },
+  { riddle: "I am not alive, but I grow; I don't have lungs, but I need air; I don't have a mouth, but water kills me. What am I?", answer: "Fire" },
+  { riddle: "What can travel around the world while staying in a corner?", answer: "A stamp" },
+  { riddle: "I have hands but cannot clap. What am I?", answer: "A clock" },
+  { riddle: "What has a heart that doesn't beat?", answer: "An artichoke" },
+  { riddle: "I follow you all the time and copy your every move, but you can't touch me or catch me. What am I?", answer: "Your shadow" },
+  { riddle: "What dies but is never buried?", answer: "A battery" },
+  { riddle: "I have a bed but never sleep, a mouth but never eat. What am I?", answer: "A river" },
+  { riddle: "What has an eye but cannot see?", answer: "A needle" },
+  { riddle: "What can you break without touching it?", answer: "A promise" },
+  { riddle: "What begins with T, ends with T, and has T in it?", answer: "A teapot" },
+  { riddle: "I am always hungry, I must always be fed. The finger I touch will soon turn red. What am I?", answer: "Fire" },
+  { riddle: "What gets wetter the more it dries?", answer: "A towel" },
+  { riddle: "I have no life, but I can die. What am I?", answer: "A battery" },
+  { riddle: "What has teeth but cannot bite?", answer: "A comb" },
+  { riddle: "What room can no one enter?", answer: "A mushroom" },
+  { riddle: "I shrink smaller every time I take a bath. What am I?", answer: "Soap" },
+  { riddle: "What can fill a room but takes up no space?", answer: "Light" },
+  { riddle: "What has a neck but no head?", answer: "A bottle" },
+  { riddle: "What invention lets you look right through a wall?", answer: "A window" },
+  { riddle: "What is seen in the middle of March and April that can't be seen at the beginning or end of either month?", answer: "The letter R" },
+  { riddle: "They come out at night without being called and are lost in the day without being stolen. What are they?", answer: "Stars" },
+  { riddle: "What has four fingers and a thumb but isn't alive?", answer: "A glove" },
+  { riddle: "I can be cracked, made, told, and played. What am I?", answer: "A joke" },
+  { riddle: "What goes up but never comes back down?", answer: "Your age" },
+  { riddle: "What belongs to you but is used more by others?", answer: "Your name" },
+];
+
+const DARK_QUOTES = [
+  { quote: "I am become death, the destroyer of worlds.", attribution: "J. Robert Oppenheimer" },
+  { quote: "Death is nothing, but to live defeated and inglorious is to die daily.", attribution: "Napoleon Bonaparte" },
+  { quote: "It is not death that a man should fear, but he should fear never beginning to live.", attribution: "Marcus Aurelius" },
+  { quote: "Normal is an illusion. What is normal for the spider is chaos for the fly.", attribution: "Charles Addams" },
+  { quote: "Be careful what you wish for. The stars might be listening.", attribution: "Crypt Keeper Proverb" },
+  { quote: "Death must be so beautiful. To lie in the soft brown earth, with the grasses waving above one's head, and listen to silence.", attribution: "Oscar Wilde" },
+  { quote: "We all go a little mad sometimes.", attribution: "Norman Bates" },
+  { quote: "In the end, we all become stories.", attribution: "Margaret Atwood" },
+  { quote: "The boundaries which divide Life from Death are at best shadowy and vague. Who shall say where the one ends, and where the other begins?", attribution: "Edgar Allan Poe" },
+  { quote: "I would rather walk with a friend in the dark, than alone in the light.", attribution: "Helen Keller" },
+  { quote: "Do not pity the dead. Pity the living, and above all, those who live without love.", attribution: "Albus Dumbledore" },
+  { quote: "Every man's life ends the same way. It is only the details of how he lived and how he died that distinguish one man from another.", attribution: "Ernest Hemingway" },
+  { quote: "The fear of death follows from the fear of life. A man who lives fully is prepared to die at any time.", attribution: "Mark Twain" },
+  { quote: "DEATH ONLY NEEDS TO HAPPEN TO YOU ONCE.", attribution: "Terry Pratchett, Mort" },
+  { quote: "I'm not afraid of death; I just don't want to be there when it happens.", attribution: "Woody Allen" },
+  { quote: "They say you die twice. Once when you stop breathing and again when someone says your name for the last time.", attribution: "Banksy" },
+  { quote: "Horror is like a serpent; always shedding its skin, always becoming something new.", attribution: "Dario Argento" },
+  { quote: "Whatever you do in life will be insignificant, but it is very important that you do it.", attribution: "Mahatma Gandhi" },
+  { quote: "Men fear death as children fear to go in the dark.", attribution: "Francis Bacon" },
+  { quote: "The living are not what I worry about. It's the dead that keep me up at night.", attribution: "Crypt Keeper Proverb" },
+  { quote: "Life is pleasant. Death is peaceful. It's the transition that's troublesome.", attribution: "Isaac Asimov" },
+  { quote: "One need not be a chamber to be haunted.", attribution: "Emily Dickinson" },
+  { quote: "The oldest and strongest emotion of mankind is fear, and the oldest and strongest kind of fear is fear of the unknown.", attribution: "H.P. Lovecraft" },
+  { quote: "I have never killed anyone, but I have read some obituary notices with great satisfaction.", attribution: "Clarence Darrow" },
+  { quote: "Monsters are real, and ghosts are real too. They live inside us, and sometimes, they win.", attribution: "Stephen King" },
+  { quote: "Death is but a door. Time is but a window. I'll be back.", attribution: "Vigo the Carpathian" },
+  { quote: "To die would be an awfully big adventure.", attribution: "Peter Pan" },
+  { quote: "Madness, as you know, is a lot like gravity. All it takes is a little push.", attribution: "The Joker" },
+  { quote: "Some things are better left buried. But not curiosity.", attribution: "Crypt Keeper Proverb" },
+  { quote: "Even the darkest night will end and the sun will rise.", attribution: "Victor Hugo" },
+  { quote: "The tomb, it seems, is not a dead end after all — merely a revolving door.", attribution: "Crypt Keeper Proverb" },
+  { quote: "Everybody has a secret world inside of them. All of the people of the world, I mean everybody.", attribution: "Neil Gaiman" },
+  { quote: "I have loved the stars too fondly to be fearful of the night.", attribution: "Sarah Williams" },
+  { quote: "Listen to them, the children of the night. What music they make!", attribution: "Bram Stoker, Dracula" },
+  { quote: "There is no exquisite beauty without some strangeness in the proportion.", attribution: "Edgar Allan Poe" },
+];
+
+const triviaInputSchema = {
+  type: "object" as const,
+  properties: {
+    amount: {
+      type: "number" as const,
+      description: "Number of questions (default 3, max 10)",
+    },
+    difficulty: {
+      type: "string" as const,
+      description: "Difficulty: easy, medium, or hard",
+    },
+  },
+  required: [] as string[],
+};
+
+const riddleInputSchema = {
+  type: "object" as const,
+  properties: {
+    count: {
+      type: "number" as const,
+      description: "Number of riddles (default 1, max 5)",
+    },
+  },
+  required: [] as string[],
+};
+
+const emptyInputSchema = {
+  type: "object" as const,
+  properties: {},
+  required: [] as string[],
+};
+
+const pollInputSchema = {
+  type: "object" as const,
+  properties: {
+    question: { type: "string" as const, description: "The poll question" },
+    options: {
+      type: "array" as const,
+      items: { type: "string" as const },
+      description: "Array of 2-10 options to vote on",
+    },
+  },
+  required: ["question", "options"] as string[],
+};
+
+export function getBuiltinTools(ctx?: { sessionId?: string }): ToolSet {
   const tools: ToolSet = {};
 
   if (BRAVE_API_KEY) {
@@ -159,6 +323,59 @@ export function getBuiltinTools(): ToolSet {
       return getWeather(input.location);
     },
   } satisfies ToolSet[string];
+
+  tools.get_trivia = {
+    description:
+      "Fetch trivia questions from the great beyond. Use when the user wants trivia, a quiz, or to test their knowledge.",
+    inputSchema: jsonSchema(triviaInputSchema),
+    execute: async (input: { amount?: number; difficulty?: string; category?: number }) => {
+      return getTrivia(
+        Math.min(input.amount ?? 3, 10),
+        input.difficulty,
+        input.category
+      );
+    },
+  } satisfies ToolSet[string];
+
+  tools.get_riddle = {
+    description:
+      "Draw a riddle from the Keeper's personal collection. Use when the user wants a riddle or brain teaser. Present the riddle first, offer to reveal the answer later.",
+    inputSchema: jsonSchema(riddleInputSchema),
+    execute: async (input: { count?: number }) => {
+      const count = Math.min(input.count ?? 1, 5);
+      const shuffled = [...RIDDLES].sort(() => Math.random() - 0.5);
+      return { riddles: shuffled.slice(0, count) };
+    },
+  } satisfies ToolSet[string];
+
+  tools.get_dark_quote = {
+    description:
+      "Retrieve a darkly humorous quote from the Keeper's grimoire. Use when the user wants a quote, inspiration, or wisdom from the crypt.",
+    inputSchema: jsonSchema(emptyInputSchema),
+    execute: async () => {
+      const quote = DARK_QUOTES[Math.floor(Math.random() * DARK_QUOTES.length)];
+      return quote;
+    },
+  } satisfies ToolSet[string];
+
+  if (ctx?.sessionId) {
+    tools.create_poll = {
+      description:
+        "Create a poll for session participants to vote on. After creating the poll, you MUST include the exact token [poll:<pollId>] in your response text (where pollId is the UUID returned) so it renders as an interactive widget. Do not list the options in text — the widget handles that.",
+      inputSchema: jsonSchema(pollInputSchema),
+      execute: async (input: { question: string; options: string[] }) => {
+        const [poll] = await db
+          .insert(polls)
+          .values({
+            sessionId: ctx.sessionId!,
+            question: input.question,
+            options: input.options,
+          })
+          .returning();
+        return { pollId: poll.id, question: poll.question, options: poll.options };
+      },
+    } satisfies ToolSet[string];
+  }
 
   return tools;
 }

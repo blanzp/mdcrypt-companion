@@ -166,8 +166,8 @@ export async function POST(req: Request) {
     }
   }
 
-  // Merge MCP tools with built-in tools (web search, etc.)
-  const builtinTools = getBuiltinTools();
+  // Merge MCP tools with built-in tools (web search, weather, polls, etc.)
+  const builtinTools = getBuiltinTools({ sessionId });
   const allTools = { ...builtinTools, ...mcpTools?.tools };
 
   // Stream LLM response

@@ -29,6 +29,12 @@ const TOOL_LABELS: Record<string, string> = {
   read_template: "Read template",
   update_template: "Updated template",
   delete_template: "Deleted template",
+  web_search: "Searched the web",
+  get_weather: "Checked the weather",
+  get_trivia: "Fetched trivia",
+  get_riddle: "Drew a riddle",
+  get_dark_quote: "Unearthed a quote",
+  create_poll: "Created poll",
 };
 
 export function ToolCallPill({ toolName, args, result }: ToolCallPillProps) {

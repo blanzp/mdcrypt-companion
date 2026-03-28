@@ -3,6 +3,34 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { CopyButton } from "./CopyButton";
+import { PollWidget } from "./PollWidget";
+
+const POLL_RE = /\[poll:([0-9a-f-]{36})\]/g;
+
+function renderContentWithPolls(content: string) {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  POLL_RE.lastIndex = 0;
+  while ((match = POLL_RE.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(
+        <MarkdownRenderer key={`md-${lastIndex}`} content={content.slice(lastIndex, match.index)} />
+      );
+    }
+    parts.push(<PollWidget key={`poll-${match[1]}`} pollId={match[1]} />);
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    parts.push(
+      <MarkdownRenderer key={`md-${lastIndex}`} content={content.slice(lastIndex)} />
+    );
+  }
+
+  return parts;
+}
 
 const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
 
@@ -65,7 +93,7 @@ export function MessageBubble({
         <div className="group relative rounded-2xl rounded-bl-md bg-zinc-100 px-4 py-2.5 dark:bg-zinc-800">
           {role === "assistant" ? (
             <>
-              <MarkdownRenderer content={content} />
+              {renderContentWithPolls(content)}
               <div className="absolute -top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
                 <CopyButton text={content} />
               </div>
