@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "mdcrypt Companion",
+  title: "mdcrypt keeper",
   description: "Team chat with AI-powered note management",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "mdcrypt Companion",
+    title: "mdcrypt keeper",
   },
 };
 

@@ -4,6 +4,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { CopyButton } from "./CopyButton";
 
+const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
+
 interface MessageBubbleProps {
   content: string;
   role: "user" | "assistant";
@@ -50,6 +52,11 @@ export function MessageBubble({
       )}
       {!showAvatar && <div className="w-8 shrink-0" />}
       <div className="flex max-w-[80%] flex-col gap-0.5">
+        {showAvatar && role === "assistant" && (
+          <span className="text-xs font-medium text-purple-500">
+            {AI_NAME}
+          </span>
+        )}
         {showAvatar && senderName && role !== "assistant" && (
           <span className="text-xs font-medium text-zinc-500">
             {senderName}

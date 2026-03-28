@@ -19,7 +19,7 @@ function getModel() {
   }
 }
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant in mdcrypt Companion, a team chat application.
+const SYSTEM_PROMPT = `You are a helpful AI assistant in mdcrypt keeper, a team chat application.
 
 When using MCP tools that modify note content (replace_section, append_to_note, update_metadata, update_task), you MUST first call read_note to get the current version number, then pass that version in the write operation. This prevents concurrent edit conflicts.
 

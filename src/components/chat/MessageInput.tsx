@@ -8,6 +8,8 @@ import {
   KeyboardEvent,
 } from "react";
 
+const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
+
 interface MessageInputProps {
   onSend: (content: string) => void;
   disabled: boolean;
@@ -64,8 +66,8 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
 
     if (atIndex >= 0) {
       const textAfterAt = textBeforeCursor.slice(atIndex + 1);
-      // Show typeahead if partial match: empty, "k", "ke", "kee", "keep", "keepe", "keeper"
-      if (/^(k(e(e(p(e(r)?)?)?)?)?)?$/i.test(textAfterAt)) {
+      // Show typeahead if text after @ is a prefix of the AI name
+      if (AI_NAME.toLowerCase().startsWith(textAfterAt.toLowerCase())) {
         setShowTypeahead(true);
         setMentionStart(atIndex);
         return;
@@ -82,10 +84,10 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
     const el = textareaRef.current;
     const cursor = el?.selectionStart ?? value.length;
 
-    // Replace from @ to cursor with @keeper
+    // Replace from @ to cursor with @name
     const before = value.slice(0, mentionStart);
     const after = value.slice(cursor);
-    const newValue = `${before}@keeper ${after}`;
+    const newValue = `${before}@${AI_NAME} ${after}`;
     setValue(newValue);
 
     setShowTypeahead(false);
@@ -95,7 +97,7 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
     requestAnimationFrame(() => {
       if (el) {
         el.focus();
-        const pos = mentionStart + "@keeper ".length;
+        const pos = mentionStart + `@${AI_NAME} `.length;
         el.setSelectionRange(pos, pos);
       }
     });
@@ -153,9 +155,9 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
               AI
             </span>
             <div>
-              <span className="font-medium">@keeper</span>
+              <span className="font-medium">@{AI_NAME}</span>
               <span className="ml-2 text-xs text-zinc-500">
-                Summon the AI assistant
+                Summon the AI
               </span>
             </div>
             <span className="ml-auto text-[10px] text-zinc-400">Tab</span>
@@ -170,7 +172,7 @@ export function MessageInput({ onSend, disabled, isShared }: MessageInputProps) 
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            isShared ? "Message... (use @keeper to summon AI)" : "Message..."
+            isShared ? `Message... (use @${AI_NAME} to summon AI)` : "Message..."
           }
           rows={1}
           disabled={disabled}

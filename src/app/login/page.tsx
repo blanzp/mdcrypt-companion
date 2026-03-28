@@ -13,7 +13,7 @@ function LoginForm() {
       <div className="w-full max-w-sm space-y-6 text-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            mdcrypt Companion
+            mdcrypt keeper
           </h1>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
             Sign in to continue

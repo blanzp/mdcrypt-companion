@@ -1,6 +1,6 @@
 {
-  "name": "mdcrypt Companion",
-  "short_name": "mdcrypt",
+  "name": "mdcrypt keeper",
+  "short_name": "keeper",
   "description": "Team chat with AI-powered note management",
   "start_url": "/",
   "display": "standalone",

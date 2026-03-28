@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { eq, or, desc } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sessions, sessionParticipants } from "@/lib/db/schema";
+import { sessions, sessionParticipants, messages } from "@/lib/db/schema";
+
+const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -73,6 +75,16 @@ export async function POST(req: Request) {
         userId,
       }))
     );
+  }
+
+  // Send welcome message in shared sessions
+  if (mode === "shared") {
+    await db.insert(messages).values({
+      sessionId: newSession.id,
+      senderId: null,
+      role: "assistant",
+      content: `Welcome, dear guest… I am ${AI_NAME}, your humble crypt keeper. Should you lose your way in these winding halls, summon me with @${AI_NAME} in your prompt, and I shall come to your aid without delay.`,
+    });
   }
 
   return NextResponse.json(newSession, { status: 201 });

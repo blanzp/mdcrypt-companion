@@ -6,12 +6,17 @@ import { useAppStore } from "@/stores/app-store";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
+const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
+
 export function McpKeyForm() {
   const { data: session } = useSession();
   const [apiKey, setApiKey] = useState("");
+  const [sharedApiKey, setSharedApiKey] = useState("");
   const [cryptId, setCryptId] = useState("");
   const [hasKey, setHasKey] = useState(false);
+  const [hasSharedKey, setHasSharedKey] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  const [showSharedKey, setShowSharedKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -20,6 +25,7 @@ export function McpKeyForm() {
       .then((r) => r.json())
       .then((data) => {
         setHasKey(data.hasKey);
+        setHasSharedKey(data.hasSharedKey);
         setCryptId(data.cryptId ?? "");
       })
       .catch(() => {});
@@ -33,13 +39,19 @@ export function McpKeyForm() {
     const res = await fetch("/api/settings/mcp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ apiKey: apiKey || undefined, cryptId }),
+      body: JSON.stringify({
+        apiKey: apiKey || undefined,
+        sharedApiKey: sharedApiKey || undefined,
+        cryptId,
+      }),
     });
 
     if (res.ok) {
       setSaved(true);
       setHasKey(!!apiKey || hasKey);
+      setHasSharedKey(!!sharedApiKey || hasSharedKey);
       setApiKey("");
+      setSharedApiKey("");
       setTimeout(() => setSaved(false), 3000);
     }
 
@@ -90,6 +102,31 @@ export function McpKeyForm() {
             </div>
           </div>
 
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Shared Sessions API Key {hasSharedKey && "(currently set)"}
+            </label>
+            <p className="mb-2 text-xs text-zinc-500">
+              Optional. Uses a separate crypt for shared sessions. Falls back to your personal key if not set.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type={showSharedKey ? "text" : "password"}
+                value={sharedApiKey}
+                onChange={(e) => setSharedApiKey(e.target.value)}
+                placeholder={hasSharedKey ? "Enter new key to update" : "Enter API key"}
+                className="flex-1 min-h-[44px] rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSharedKey(!showSharedKey)}
+                className="rounded-lg border border-zinc-200 px-3 text-xs dark:border-zinc-700"
+              >
+                {showSharedKey ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
           <Input
             label="Crypt ID"
             value={cryptId}
@@ -110,10 +147,10 @@ export function McpKeyForm() {
         </h2>
         <div>
           <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Context messages for @keeper
+            Context messages for @{AI_NAME}
           </label>
           <p className="mb-2 text-xs text-zinc-500">
-            Number of recent messages included when summoning @keeper in shared sessions.
+            Number of recent messages included when summoning @{AI_NAME} in shared sessions.
           </p>
           <input
             type="number"
@@ -136,7 +173,7 @@ export function McpKeyForm() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
           About
         </h2>
-        <p className="text-sm text-zinc-500">mdcrypt Companion v0.1.0</p>
+        <p className="text-sm text-zinc-500">mdcrypt keeper v0.1.0</p>
       </section>
     </div>
   );

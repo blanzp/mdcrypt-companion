@@ -72,7 +72,7 @@ export function MainShell() {
           </svg>
         </button>
         <h1 className="ml-2 truncate text-sm font-medium">
-          {activeSession?.title ?? "mdcrypt Companion"}
+          {activeSession?.title ?? "mdcrypt keeper"}
         </h1>
       </header>
 

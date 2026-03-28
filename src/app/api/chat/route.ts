@@ -15,7 +15,8 @@ import { getMcpTools } from "@/lib/mcp";
 import { decrypt } from "@/lib/crypto";
 import { publishMessage } from "@/lib/kv";
 
-const KEEPER_MENTION = /@keeper\b/i;
+const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
+const KEEPER_MENTION = new RegExp(`@${AI_NAME}\\b`, "i");
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -138,14 +139,18 @@ export async function POST(req: Request) {
   const mcpOwnerId = isShared ? chatSession.ownerId : session.user.id;
 
   const [mcpOwner] = await db
-    .select({ mcpApiKey: users.mcpApiKey })
+    .select({ mcpApiKey: users.mcpApiKey, mcpSharedApiKey: users.mcpSharedApiKey })
     .from(users)
     .where(eq(users.id, mcpOwnerId))
     .limit(1);
 
-  if (mcpOwner?.mcpApiKey) {
+  const encryptedKey = isShared
+    ? (mcpOwner?.mcpSharedApiKey ?? mcpOwner?.mcpApiKey)
+    : mcpOwner?.mcpApiKey;
+
+  if (encryptedKey) {
     try {
-      const apiKey = decrypt(mcpOwner.mcpApiKey);
+      const apiKey = decrypt(encryptedKey);
       mcpTools = await getMcpTools(apiKey);
     } catch {
       // Decryption failed or MCP server unreachable — silently disable MCP

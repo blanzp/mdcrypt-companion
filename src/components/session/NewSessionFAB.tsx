@@ -10,9 +10,9 @@ export function NewSessionFAB() {
   return (
     <button
       onClick={() => setNewSessionModalOpen(true)}
-      className="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+      className="fixed right-6 flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 z-10"
       style={{
-        bottom: "calc(1.5rem + env(safe-area-inset-bottom))",
+        bottom: "calc(5rem + env(safe-area-inset-bottom))",
       }}
       aria-label="New session"
     >

@@ -15,6 +15,7 @@ export async function GET() {
   const [user] = await db
     .select({
       mcpApiKey: users.mcpApiKey,
+      mcpSharedApiKey: users.mcpSharedApiKey,
       mcpCryptId: users.mcpCryptId,
     })
     .from(users)
@@ -23,6 +24,7 @@ export async function GET() {
 
   return NextResponse.json({
     hasKey: !!user?.mcpApiKey,
+    hasSharedKey: !!user?.mcpSharedApiKey,
     cryptId: user?.mcpCryptId ?? null,
   });
 }
@@ -33,12 +35,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { apiKey, cryptId } = await req.json();
+  const { apiKey, sharedApiKey, cryptId } = await req.json();
 
-  const updateData: { mcpApiKey?: string; mcpCryptId?: string } = {};
+  const updateData: { mcpApiKey?: string; mcpSharedApiKey?: string | null; mcpCryptId?: string } = {};
 
   if (apiKey) {
     updateData.mcpApiKey = encrypt(apiKey);
+  }
+  if (sharedApiKey !== undefined) {
+    updateData.mcpSharedApiKey = sharedApiKey ? encrypt(sharedApiKey) : null;
   }
   if (cryptId !== undefined) {
     updateData.mcpCryptId = cryptId || null;

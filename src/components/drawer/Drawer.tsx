@@ -10,7 +10,7 @@ import Link from "next/link";
 
 export function Drawer() {
   const { data: session } = useSession();
-  const { drawerOpen, setDrawerOpen, setActiveSession } = useAppStore();
+  const { drawerOpen, setDrawerOpen, activeSessionId, setActiveSession } = useAppStore();
   const { privateSessions, sharedSessions, mutate } = useSessions();
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +35,16 @@ export function Drawer() {
       body: JSON.stringify({ title: newTitle }),
     });
     mutate();
+  }
+
+  async function handleDelete(sessionId: string) {
+    const res = await fetch(`/api/sessions/${sessionId}`, { method: "DELETE" });
+    if (res.ok) {
+      if (activeSessionId === sessionId) {
+        setActiveSession(null);
+      }
+      mutate();
+    }
   }
 
   if (!session) return null;
@@ -75,14 +85,18 @@ export function Drawer() {
           <SessionList
             title="PRIVATE"
             sessions={privateSessions}
+            userId={session.user.id}
             onSelect={handleSessionSelect}
             onRename={handleRename}
+            onDelete={handleDelete}
           />
           <SessionList
             title="SHARED"
             sessions={sharedSessions}
+            userId={session.user.id}
             onSelect={handleSessionSelect}
             onRename={handleRename}
+            onDelete={handleDelete}
           />
         </div>
 

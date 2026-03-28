@@ -16,7 +16,8 @@ interface Message {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-const KEEPER_RE = /@keeper\b/i;
+const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
+const KEEPER_RE = new RegExp(`@${AI_NAME}\\b`, "i");
 
 export function useChat(
   sessionId: string | null,
