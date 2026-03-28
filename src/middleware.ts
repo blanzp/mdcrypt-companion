@@ -22,6 +22,6 @@ export const config = {
      * - /icons, /manifest.json, /sw.js (PWA assets)
      * - static files (favicon, images, etc.)
      */
-    "/((?!login|api/auth|_next|icons|manifest\\.json|sw\\.js|favicon\\.ico|.*\\.png$|.*\\.svg$).*)",
+    "/((?!login|api/auth|api/debug|_next|icons|manifest\\.json|sw\\.js|favicon\\.ico|.*\\.png$|.*\\.svg$).*)",
   ],
 };
