@@ -23,6 +23,10 @@ interface AppState {
   newSessionModalOpen: boolean;
   setNewSessionModalOpen: (open: boolean) => void;
 
+  // Add member modal
+  addMemberModalOpen: boolean;
+  setAddMemberModalOpen: (open: boolean) => void;
+
   // Streaming
   isStreaming: boolean;
   setIsStreaming: (streaming: boolean) => void;
@@ -56,6 +60,9 @@ export const useAppStore = create<AppState>()(
 
       newSessionModalOpen: false,
       setNewSessionModalOpen: (open) => set({ newSessionModalOpen: open }),
+
+      addMemberModalOpen: false,
+      setAddMemberModalOpen: (open) => set({ addMemberModalOpen: open }),
 
       isStreaming: false,
       setIsStreaming: (streaming) => set({ isStreaming: streaming }),
