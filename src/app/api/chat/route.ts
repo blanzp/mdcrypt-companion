@@ -11,7 +11,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { streamChat } from "@/lib/llm";
-import { createMcpTools } from "@/lib/mcp";
+import { getMcpTools } from "@/lib/mcp";
 import { decrypt } from "@/lib/crypto";
 import { publishMessage } from "@/lib/kv";
 
@@ -134,26 +134,26 @@ export async function POST(req: Request) {
   ];
 
   // Resolve MCP credentials
-  let mcpTools: ReturnType<typeof createMcpTools> | undefined;
+  let mcpTools: Awaited<ReturnType<typeof getMcpTools>> | undefined;
   const mcpOwnerId = isShared ? chatSession.ownerId : session.user.id;
 
   const [mcpOwner] = await db
-    .select({ mcpApiKey: users.mcpApiKey, mcpCryptId: users.mcpCryptId })
+    .select({ mcpApiKey: users.mcpApiKey })
     .from(users)
     .where(eq(users.id, mcpOwnerId))
     .limit(1);
 
-  if (mcpOwner?.mcpApiKey && mcpOwner?.mcpCryptId) {
+  if (mcpOwner?.mcpApiKey) {
     try {
       const apiKey = decrypt(mcpOwner.mcpApiKey);
-      mcpTools = createMcpTools(apiKey, mcpOwner.mcpCryptId);
+      mcpTools = await getMcpTools(apiKey);
     } catch {
-      // Decryption failed — silently disable MCP
+      // Decryption failed or MCP server unreachable — silently disable MCP
     }
   }
 
   // Stream LLM response
-  const result = await streamChat(coreMessages, mcpTools);
+  const result = await streamChat(coreMessages, mcpTools?.tools);
 
   // Create SSE response
   const encoder = new TextEncoder();
@@ -247,6 +247,8 @@ export async function POST(req: Request) {
           )
         );
         controller.close();
+      } finally {
+        await mcpTools?.close();
       }
     },
   });
