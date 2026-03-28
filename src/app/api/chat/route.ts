@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 import { streamChat } from "@/lib/llm";
 import { getMcpTools } from "@/lib/mcp";
+import { getBuiltinTools } from "@/lib/tools";
 import { decrypt } from "@/lib/crypto";
 import { publishMessage } from "@/lib/kv";
 
@@ -165,8 +166,12 @@ export async function POST(req: Request) {
     }
   }
 
+  // Merge MCP tools with built-in tools (web search, etc.)
+  const builtinTools = getBuiltinTools();
+  const allTools = { ...builtinTools, ...mcpTools?.tools };
+
   // Stream LLM response
-  const result = await streamChat(coreMessages, mcpTools?.tools);
+  const result = await streamChat(coreMessages, allTools);
 
   // Create SSE response
   const encoder = new TextEncoder();
