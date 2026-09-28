@@ -24,10 +24,13 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name"),
   role: userRoleEnum("role").notNull().default("member"),
-  mcpApiKey: text("mcp_api_key"),
-  mcpSharedApiKey: text("mcp_shared_api_key"),
-  mcpCryptId: text("mcp_crypt_id"),
-  mcpSharedCryptId: text("mcp_shared_crypt_id"),
+  // Second brain connection (OAuth tokens encrypted with lib/crypto)
+  brainClientId: text("brain_client_id"),
+  brainAccessToken: text("brain_access_token"),
+  brainRefreshToken: text("brain_refresh_token"),
+  brainExpiresAt: timestamp("brain_expires_at", { withTimezone: true }),
+  brainLogin: text("brain_login"),
+  brainRepo: text("brain_repo"),
   inviteStatus: inviteStatusEnum("invite_status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

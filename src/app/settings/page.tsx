@@ -1,12 +1,20 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { McpKeyForm } from "@/components/settings/McpKeyForm";
+import { SettingsForm } from "@/components/settings/SettingsForm";
 import Link from "next/link";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+
+  // Result of connecting the second brain, passed back by /api/brain/callback
+  const { brain, detail } = await searchParams;
+  const brainResult = typeof brain === "string" ? { result: brain, detail: typeof detail === "string" ? detail : undefined } : undefined;
 
   return (
     <div className="mx-auto max-w-lg p-6">
@@ -31,7 +39,7 @@ export default async function SettingsPage() {
         </Link>
         <h1 className="text-xl font-bold">Settings</h1>
       </div>
-      <McpKeyForm />
+      <SettingsForm brainResult={brainResult} />
     </div>
   );
 }

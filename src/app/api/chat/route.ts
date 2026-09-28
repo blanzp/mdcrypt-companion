@@ -8,12 +8,10 @@ import {
   sessions,
   sessionParticipants,
   messages,
-  users,
 } from "@/lib/db/schema";
-import { streamChat } from "@/lib/llm";
-import { getMcpTools } from "@/lib/mcp";
+import { buildSystemPrompt, streamChat } from "@/lib/llm";
+import { BrainDisconnectedError, getBrainTools } from "@/lib/brain";
 import { getBuiltinTools } from "@/lib/tools";
-import { decrypt } from "@/lib/crypto";
 import { publishMessage } from "@/lib/kv";
 
 const AI_NAME = process.env.NEXT_PUBLIC_AI_NAME || "keeper";
@@ -135,43 +133,31 @@ export async function POST(req: Request) {
     { role: "user" as const, content: llmMessage },
   ];
 
-  // Resolve MCP credentials
-  let mcpTools: Awaited<ReturnType<typeof getMcpTools>> | undefined;
-  const mcpOwnerId = isShared ? chatSession.ownerId : session.user.id;
-
-  const [mcpOwner] = await db
-    .select({
-      mcpApiKey: users.mcpApiKey,
-      mcpSharedApiKey: users.mcpSharedApiKey,
-      mcpCryptId: users.mcpCryptId,
-      mcpSharedCryptId: users.mcpSharedCryptId,
-    })
-    .from(users)
-    .where(eq(users.id, mcpOwnerId))
-    .limit(1);
-
-  const encryptedKey = isShared
-    ? (mcpOwner?.mcpSharedApiKey ?? mcpOwner?.mcpApiKey)
-    : mcpOwner?.mcpApiKey;
-  const cryptId = isShared
-    ? (mcpOwner?.mcpSharedCryptId ?? mcpOwner?.mcpCryptId)
-    : mcpOwner?.mcpCryptId;
-
-  if (encryptedKey) {
-    try {
-      const apiKey = decrypt(encryptedKey);
-      mcpTools = await getMcpTools(apiKey, cryptId ?? undefined);
-    } catch {
-      // Decryption failed or MCP server unreachable — silently disable MCP
-    }
+  // Second brain: your own in private sessions; the session owner's, read-only, in shared ones
+  let brain: Awaited<ReturnType<typeof getBrainTools>> = null;
+  let brainProblem: string | undefined;
+  const brainOwnerId = isShared ? chatSession.ownerId : session.user.id;
+  const whose = brainOwnerId === session.user.id ? "your" : "the session owner's";
+  try {
+    brain = await getBrainTools(brainOwnerId, { readOnly: isShared });
+  } catch (err) {
+    console.error("[brain]", err);
+    brainProblem =
+      err instanceof BrainDisconnectedError
+        ? `The connection to ${whose} second brain has expired. Reconnect it in Settings.`
+        : "The second brain server can't be reached right now.";
   }
 
-  // Merge MCP tools with built-in tools (web search, weather, polls, etc.)
+  // Merge second brain tools with built-in tools (web search, weather, polls, etc.)
   const builtinTools = getBuiltinTools({ sessionId });
-  const allTools = { ...builtinTools, ...mcpTools?.tools };
+  const allTools = { ...builtinTools, ...brain?.tools };
+  const systemPrompt = buildSystemPrompt({
+    brain: brain ? (isShared ? "read-only" : "full") : "none",
+    brainProblem,
+  });
 
   // Stream LLM response
-  const result = await streamChat(coreMessages, allTools);
+  const result = await streamChat(coreMessages, allTools, systemPrompt);
 
   // Create SSE response
   const encoder = new TextEncoder();
@@ -266,7 +252,7 @@ export async function POST(req: Request) {
         );
         controller.close();
       } finally {
-        await mcpTools?.close();
+        await brain?.close();
       }
     },
   });
